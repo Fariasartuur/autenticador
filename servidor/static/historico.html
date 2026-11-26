@@ -8,17 +8,22 @@
 </head>
 <body>
     <div class="container">
-        <div class="card">
+        <div class="card largo">
             <h2>Histórico de acessos</h2>
 
-            <table class="tabela">
-                <thead>
-                    <tr><th>Quando</th><th>Evento</th><th>Detalhe</th></tr>
-                </thead>
-                <tbody id="linhas"></tbody>
-            </table>
+            <p class="subtitulo">Os 50 eventos mais recentes da sua conta.</p>
 
-            <a href="./configuracoes.html" class="btn">Voltar</a>
+            <div class="tabela-wrap">
+                <table class="tabela">
+                    <thead>
+                        <tr><th>Quando</th><th>Evento</th><th>Detalhe</th></tr>
+                    </thead>
+                    <tbody id="linhas"></tbody>
+                </table>
+            </div>
+            <p id="vazio" class="vazio" hidden>Nenhum evento ainda.</p>
+
+            <a href="./configuracoes.html" class="btn btn-secundario">Voltar</a>
         </div>
     </div>
 
@@ -46,6 +51,7 @@
             const { eventos } = await r.json();
 
             const tbody = document.getElementById("linhas");
+            document.getElementById("vazio").hidden = eventos.length > 0;
             for (const ev of eventos) {
                 const tr = document.createElement("tr");
                 for (const texto of [

@@ -10,17 +10,19 @@
     <div class="container">
         <form id="form-config" class="card">
             <h2>Etapas exigidas no login</h2>
-            <p>Escolha o que será pedido no terminal para entrar na sua conta.</p>
+            <p class="subtitulo">Escolha o que será pedido no terminal para entrar na sua conta.</p>
 
             <div id="etapas" class="etapas"></div>
 
-            <div>
-                <button class="btn">Salvar</button>
-                <button type="button" class="btn" id="historico">Histórico</button>
-                <button type="button" class="btn" id="sair">Sair</button>
-            </div>
-
             <p id="msg" class="msg"></p>
+
+            <div class="acoes">
+                <button class="btn">Salvar</button>
+                <div class="acoes-linha">
+                    <button type="button" class="btn btn-secundario" id="historico">Histórico</button>
+                    <button type="button" class="btn btn-perigo" id="sair">Sair</button>
+                </div>
+            </div>
         </form>
     </div>
 
