@@ -16,6 +16,7 @@
 
             <div>
                 <button class="btn">Salvar</button>
+                <button type="button" class="btn" id="historico">Histórico</button>
                 <button type="button" class="btn" id="sair">Sair</button>
             </div>
 
@@ -67,6 +68,10 @@
             }
             const { pedido_id } = await r.json();
             location.replace(`./aguardando.html?id=${pedido_id}`);
+        };
+
+        document.getElementById("historico").onclick = () => {
+            location.href = "./historico.html";
         };
 
         document.getElementById("sair").onclick = async () => {

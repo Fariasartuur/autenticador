@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>Histórico de acessos</h2>
+
+            <table class="tabela">
+                <thead>
+                    <tr><th>Quando</th><th>Evento</th><th>Detalhe</th></tr>
+                </thead>
+                <tbody id="linhas"></tbody>
+            </table>
+
+            <a href="./configuracoes.html" class="btn">Voltar</a>
+        </div>
+    </div>
+
+    <script>
+        // nomes legíveis para cada tipo de evento gravado pelo servidor
+        const nomes = {
+            pedido_criado:         "Pedido enviado ao terminal",
+            aprovado:              "Aprovado no terminal",
+            negado:                "Negado no terminal",
+            bloqueado:             "Bloqueado (tentativas esgotadas)",
+            expirado:              "Pedido expirado",
+            login_liberado:        "Sessão liberada",
+            senha_incorreta:       "Senha incorreta",
+            politica_alterada:     "Etapas alteradas",
+            resposta_repetida:     "Resposta repetida rejeitada",
+            assinatura_invalida:   "Assinatura inválida rejeitada",
+            etapas_divergentes:    "Etapas divergentes rejeitadas",
+            terminal_offline:      "Tentativa com terminal desconectado",
+            terminal_desconectado: "Terminal desconectou",
+        };
+
+        async function carregar() {
+            const r = await fetch("/api/eventos");
+            if (r.status === 401) return location.replace("./login.html");
+            const { eventos } = await r.json();
+
+            const tbody = document.getElementById("linhas");
+            for (const ev of eventos) {
+                const tr = document.createElement("tr");
+                for (const texto of [
+                    new Date(ev.criado_em * 1000).toLocaleString("pt-BR"),
+                    nomes[ev.tipo] ?? ev.tipo,
+                    ev.detalhe ?? "",
+                ]) {
+                    const td = document.createElement("td");
+                    td.textContent = texto;   // textContent evita injetar HTML
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            }
+        }
+
+        carregar();
+    </script>
+</body>
+</html>

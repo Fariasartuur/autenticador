@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,7 +23,7 @@
             negado:   "Acesso negado no terminal.",
             expirado: "O pedido expirou. Tente novamente.",
             bloqueado: "Muitas tentativas incorretas.",
-            erro:     "Não foi possível falar com o terminal.",
+            erro:     "O terminal desconectou durante o pedido.",
         };
 
         function finalizar(titulo, msg) {
@@ -40,7 +40,7 @@
                 const { status } = await r.json();
 
                 if (status === "aprovado") {
-                    location.href = "./configuracoes.html";
+                    location.replace("./configuracoes.html");
                 } else if (status !== "pendente") {
                     finalizar("Acesso não liberado", mensagens[status] ?? "Erro desconhecido.");
                 }
