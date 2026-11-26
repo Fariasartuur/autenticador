@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <form id="form-login">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input name="email" type="email" placeholder="Digite seu email" />
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input
+            name="password"
+            type="password"
+            placeholder="Digite sua senha"
+          />
+        </div>
+        <button class="btn">Entrar</button>
+      </form>
+    </div>
+
+    <script>
+      document.getElementById("form-login").onsubmit = async (e) => {
+        e.preventDefault();
+        const dados = Object.fromEntries(new FormData(e.target));
+        const r = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dados),
+        });
+        const { pedido_id } = await r.json();
+        location.href = `/static/aguardando.html?id=${pedido_id}`;
+      };
+    </script>
+  </body>
+</html>

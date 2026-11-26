@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações</title>
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="container">
+        <form id="form-config" class="card">
+            <h2>Etapas exigidas no login</h2>
+            <p>Escolha o que será pedido no terminal para entrar na sua conta.</p>
+
+            <div id="etapas" class="etapas"></div>
+
+            <div>
+                <button class="btn">Salvar</button>
+                <button type="button" class="btn" id="sair">Sair</button>
+            </div>
+
+            <p id="msg" class="msg"></p>
+        </form>
+    </div>
+
+    <script>
+        const nomes = { cartao: "Cartão", pin: "PIN", gesto: "Sequência de movimentos" };
+
+        async function carregar() {
+            const r = await fetch("/api/configuracoes");
+            if (r.status === 401) return location.replace("./login.html");
+            const { etapas } = await r.json();
+
+            const div = document.getElementById("etapas");
+            div.innerHTML = "";
+
+            for (const [chave, info] of Object.entries(etapas)) {
+                const obrigatoria = chave === "cartao";
+                const label = document.createElement("label");
+                label.className = "etapa";
+                label.innerHTML = `
+                    <input type="checkbox" name="${chave}"
+                        ${info.ativa ? "checked" : ""}
+                        ${obrigatoria ? "disabled" : ""}>
+                    <span>${nomes[chave]}</span>
+                    <small>${obrigatoria ? "obrigatória" : ""}</small>
+                `;
+                div.appendChild(label);
+            }
+        }
+
+        document.getElementById("form-config").onsubmit = async (e) => {
+            e.preventDefault();
+            const marcadas = [...document.querySelectorAll("#etapas input:checked")]
+                .map(i => i.name);
+
+            const r = await fetch("/api/configuracoes", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ etapas: marcadas }),
+            });
+
+            if (!r.ok) {
+                const { detail } = await r.json();
+                document.getElementById("msg").textContent = detail ?? "Não foi possível salvar.";
+                return;
+            }
+            const { pedido_id } = await r.json();
+            location.replace(`./aguardando.html?id=${pedido_id}`);
+        };
+
+        document.getElementById("sair").onclick = async () => {
+            await fetch("/api/logout", { method: "POST" });
+            location.replace("./login.html");
+        };
+
+        carregar();
+    </script>
+</body>
+</html>
