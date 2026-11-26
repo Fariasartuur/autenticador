@@ -16,6 +16,9 @@ ETAPAS_VALIDAS = ["cartao", "pin", "gesto"]
 VALIDADE_PEDIDO = 120      # segundos para confirmar no terminal
 VALIDADE_SESSAO = 3600     # 1 hora logado
 
+# quantos terminais autenticados estão conectados agora
+terminais_conectados = 0
+
 # ---------- Funções auxiliares ----------
 
 def para_lista(texto: str) -> list[str]:
@@ -76,13 +79,20 @@ def login(dados: LoginEntrada, response: Response):
         ).fetchone()
 
         senha_ok = usuario is not None and verificar_senha(dados.password, usuario["senha_hash"])
-        if senha_ok:
-            pedido_id = criar_pedido(conn, usuario, "login")
+        terminal_ok = terminais_conectados > 0
+
+        if not senha_ok:
+            registrar_evento(conn, "senha_incorreta",
+                             usuario["id"] if usuario else None, detalhe=dados.email)
+        elif not terminal_ok:
+            registrar_evento(conn, "terminal_offline", usuario["id"], detalhe="login")
         else:
-            registrar_evento(conn, "senha_incorreta", detalhe=dados.email)
+            pedido_id = criar_pedido(conn, usuario, "login")
 
     if not senha_ok:
         raise HTTPException(status_code=401, detail="Email ou senha incorretos")
+    if not terminal_ok:
+        raise HTTPException(status_code=503, detail="Terminal desconectado. Tente novamente.")
 
     response.set_cookie("pedido_login", pedido_id, httponly=True,
                         samesite="strict", max_age=VALIDADE_PEDIDO)
@@ -173,9 +183,24 @@ def alterar_configuracoes(dados: ConfigEntrada, usuario=Depends(usuario_logado))
     if novas_texto == usuario["etapas_ativas"]:
         raise HTTPException(status_code=400, detail="Nada mudou")
 
+    if terminais_conectados == 0:
+        raise HTTPException(status_code=503, detail="Terminal desconectado. Tente novamente.")
+
     with conectar() as conn:
         pedido_id = criar_pedido(conn, usuario, "config", etapas_novas=novas_texto)
     return {"pedido_id": pedido_id}
+
+# ---------- Histórico ----------
+
+@app.get("/api/eventos")
+def listar_eventos(usuario=Depends(usuario_logado)):
+    with conectar() as conn:
+        linhas = conn.execute(
+            "SELECT tipo, detalhe, pedido_id, criado_em FROM eventos "
+            "WHERE usuario_id = ? ORDER BY id DESC LIMIT 50",
+            (usuario["id"],),
+        ).fetchall()
+    return {"eventos": [dict(l) for l in linhas]}
 
 # ---------- Terminal ----------
 
@@ -227,7 +252,8 @@ def processar_resposta(chave, msg: dict) -> tuple[bool, str]:
             return False, "etapas não conferem com a política"
 
         conn.execute("UPDATE pedidos SET status = ? WHERE id = ?", (decisao, pedido_id))
-        registrar_evento(conn, decisao, uid, pedido_id)
+        duracao = time.time() - pedido["criado_em"]       # tempo de resposta
+        registrar_evento(conn, decisao, uid, pedido_id, f"{duracao:.1f} s")
 
         if decisao == "aprovado" and pedido["tipo"] == "config":
             conn.execute(
@@ -260,6 +286,11 @@ async def ws_terminal(ws: WebSocket):
         await ws.close(code=1008, reason="terminal não autenticado")
         return
 
+    global terminais_conectados
+    terminais_conectados += 1
+    with conectar() as conn:
+        registrar_evento(conn, "terminal_conectado")
+
     # 2. envia pedidos pendentes e recebe respostas ao mesmo tempo
     enviados = set()
 
@@ -291,6 +322,21 @@ async def ws_terminal(ws: WebSocket):
         pass
     finally:
         tarefa.cancel()
+        terminais_conectados -= 1
+        if terminais_conectados == 0:
+            marcar_pedidos_sem_terminal()
+
+def marcar_pedidos_sem_terminal():
+    # o terminal caiu no meio de um pedido: ele vira "erro" e não pode mais ser aprovado
+    with conectar() as conn:
+        pendentes = conn.execute(
+            "SELECT id, usuario_id FROM pedidos WHERE status = 'pendente'"
+        ).fetchall()
+        for p in pendentes:
+            conn.execute("UPDATE pedidos SET status = 'erro' WHERE id = ?", (p["id"],))
+            registrar_evento(conn, "terminal_desconectado", p["usuario_id"], p["id"])
+        if not pendentes:
+            registrar_evento(conn, "terminal_desconectado")
 
 # ---------- Páginas ----------
 
