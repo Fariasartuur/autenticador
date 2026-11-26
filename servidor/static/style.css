@@ -1,121 +1,335 @@
+/* ---------- Base ---------- */
+
+:root {
+    --primaria: #2f4bff;
+    --primaria-escura: #1f36d6;
+    --fundo: #f3f5fb;
+    --cartao: #ffffff;
+    --texto: #1c2033;
+    --texto-suave: #6b7185;
+    --borda: #dde1ec;
+    --erro: #d13a3a;
+    --sucesso: #1f9d55;
+    --raio: 12px;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 body {
-    font-family: system-ui, sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+    line-height: 1.5;
 }
 
 .container {
     min-height: 100vh;
+    min-height: 100dvh;   /* altura real no celular (desconta a barra do navegador) */
     display: flex;
     justify-content: center;
     align-items: center;
-
+    padding: 16px;
 }
 
-#form-login {
-    width: 400px;
+/* ---------- Cartão ---------- */
+
+.card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--cartao);
+    border: 1px solid var(--borda);
+    border-radius: var(--raio);
+    box-shadow: 0 8px 24px rgba(28, 32, 51, 0.06);
+    padding: 32px 28px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    border: 1px solid #ccc;
-    padding: 20px;
-    border-radius: 8px;
-
 }
+
+.card.largo {
+    max-width: 760px;
+}
+
+.card.centro {
+    align-items: center;
+    text-align: center;
+}
+
+.card h2 {
+    font-size: 1.4rem;
+    line-height: 1.3;
+}
+
+.subtitulo {
+    color: var(--texto-suave);
+    font-size: 0.95rem;
+    margin-top: -8px;
+}
+
+/* ---------- Formulário ---------- */
 
 .form-group {
     display: flex;
     flex-direction: column;
+    gap: 6px;
 }
 
 .form-group label {
-    margin-bottom: 8px;
-    color: #333;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
-input, .btn {
-    padding: 16px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    outline: none;
+input[type="email"],
+input[type="password"],
+input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1rem;              /* 16px evita o zoom automático no iPhone */
+    border: 1px solid var(--borda);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--texto);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
+
+input:focus {
+    outline: none;
+    border-color: var(--primaria);
+    box-shadow: 0 0 0 3px rgba(47, 75, 255, 0.15);
+}
+
+/* ---------- Botões ---------- */
 
 .btn {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    font: inherit;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    color: #fff;
+    background: var(--primaria);
+    border: 1px solid var(--primaria);
+    border-radius: 8px;
     cursor: pointer;
-    background-color: #0400ff;
-    color: white;
-    transition: all 0.3s ease;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
 }
 
 .btn:hover {
-    background-color: white;
-    color: #89c6ff;
+    background: var(--primaria-escura);
+    border-color: var(--primaria-escura);
 }
 
-.card {
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-secundario {
+    color: var(--primaria);
+    background: transparent;
+}
+
+.btn-secundario:hover {
+    color: #fff;
+}
+
+.btn-perigo {
+    color: var(--erro);
+    background: transparent;
+    border-color: var(--borda);
+}
+
+.btn-perigo:hover {
+    color: #fff;
+    background: var(--erro);
+    border-color: var(--erro);
+}
+
+.acoes {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    text-align: center;
+    gap: 10px;
+    width: 100%;
 }
 
+.acoes-linha {
+    display: flex;
+    gap: 10px;
+}
+
+.acoes-linha .btn {
+    flex: 1;
+}
+
+/* ---------- Mensagens ---------- */
+
+.msg {
+    color: var(--erro);
+    font-size: 0.9rem;
+    min-height: 1.3em;
+}
+
+.msg:empty {
+    display: none;
+}
+
+/* ---------- Aguardando ---------- */
+
 .spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #ddd;
-    border-top-color: #333;
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--borda);
+    border-top-color: var(--primaria);
     border-radius: 50%;
-    animation: girar 1s linear infinite;
+    animation: girar 0.9s linear infinite;
 }
 
 @keyframes girar {
     to { transform: rotate(360deg); }
 }
 
-a.btn {
-    text-decoration: none;
-    color: inherit;
-}
+/* ---------- Configurações ---------- */
 
 .etapas {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    width: 300px;
+    gap: 10px;
 }
 
 .etapa {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
     cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.etapa:hover {
+    border-color: var(--primaria);
+}
+
+.etapa:has(input:checked) {
+    border-color: var(--primaria);
+    background: rgba(47, 75, 255, 0.05);
+}
+
+.etapa input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primaria);
 }
 
 .etapa small {
     margin-left: auto;
-    color: #888;
+    color: var(--texto-suave);
+    font-size: 0.8rem;
 }
 
-.msg {
-    color: #c00;
+/* ---------- Histórico ---------- */
+
+.tabela-wrap {
+    width: 100%;
+    overflow-x: auto;   /* no celular a tabela rola de lado em vez de quebrar */
 }
 
 .tabela {
+    width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 0.9rem;
     text-align: left;
+}
+
+.tabela th {
+    color: var(--texto-suave);
+    font-weight: 500;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
 }
 
 .tabela th,
 .tabela td {
-    padding: 8px 12px;
-    border-bottom: 1px solid #ddd;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--borda);
+    white-space: nowrap;
+}
+
+.tabela tbody tr:hover {
+    background: var(--fundo);
+}
+
+.vazio {
+    color: var(--texto-suave);
+    text-align: center;
+    padding: 24px 0;
+}
+
+/* ---------- Celular ---------- */
+
+@media (max-width: 480px) {
+    .container {
+        align-items: flex-start;
+        padding: 12px;
+    }
+
+    .card {
+        padding: 24px 18px;
+        margin-top: 24px;
+    }
+
+    .card h2 {
+        font-size: 1.25rem;
+    }
+
+    .acoes-linha {
+        flex-direction: column;
+    }
+
+    /* no celular cada evento vira um bloco: data em cima, evento e detalhe embaixo */
+    .tabela thead {
+        display: none;
+    }
+
+    .tabela tr {
+        display: block;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--borda);
+    }
+
+    .tabela td {
+        display: block;
+        padding: 0;
+        border: none;
+        white-space: normal;
+    }
+
+    .tabela td:first-child {
+        color: var(--texto-suave);
+        font-size: 0.78rem;
+    }
+
+    .tabela td:nth-child(2) {
+        font-weight: 500;
+    }
+
+    .tabela td:last-child {
+        color: var(--texto-suave);
+        font-size: 0.85rem;
+    }
+
+    .tabela tbody tr:hover {
+        background: none;
+    }
 }

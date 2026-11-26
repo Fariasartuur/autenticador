@@ -8,18 +8,19 @@
   </head>
   <body>
     <div class="container">
-      <form id="form-login">
+      <form id="form-login" class="card">
+        <h2>Entrar</h2>
+        <p class="subtitulo">Sistema de gestão do laboratório</p>
+
         <div class="form-group">
-          <label for="email">Email:</label>
-          <input name="email" type="email" placeholder="Digite seu email" />
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="Digite seu email"
+                 autocomplete="username" required />
         </div>
         <div class="form-group">
-          <label for="password">Password:</label>
-          <input
-            name="password"
-            type="password"
-            placeholder="Digite sua senha"
-          />
+          <label for="password">Senha</label>
+          <input id="password" name="password" type="password" placeholder="Digite sua senha"
+                 autocomplete="current-password" required />
         </div>
         <button class="btn">Entrar</button>
         <p id="msg" class="msg"></p>
