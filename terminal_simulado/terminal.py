@@ -2,6 +2,7 @@ import asyncio
 import base64
 import hmac
 import json
+import ssl
 import sys
 from pathlib import Path
 
@@ -9,8 +10,10 @@ import websockets
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-SERVIDOR = "ws://127.0.0.1:8000/ws/terminal"
+HOST = "127.0.0.1:8000"
 PASTA = Path(__file__).parent
+CERTIFICADO_SERVIDOR = PASTA.parent / "servidor" / "cert.pem"
+SEM_TLS = "--sem-tls" in sys.argv
 CHAVE_PRIVADA = PASTA / "terminal_priv.pem"
 CHAVE_PUBLICA = PASTA.parent / "servidor" / "terminal_pub.pem"
 MAX_TENTATIVAS = 3
@@ -27,6 +30,21 @@ PERGUNTAS = {
     "pin": "Digite o PIN: ",
     "gesto": "Faça a sequência (ex.: esquerda,frente,direita): ",
 }
+
+# ---------- Conexão ----------
+
+def montar_conexao() -> tuple[str, ssl.SSLContext | None]:
+    if SEM_TLS:
+        print("⚠ Conectando sem TLS (ws://)")
+        return f"ws://{HOST}/ws/terminal", None
+
+    if not CERTIFICADO_SERVIDOR.exists():
+        sys.exit(f"Certificado não encontrado em {CERTIFICADO_SERVIDOR}.\n"
+                 "Rode 'python gerar_certificado.py' em servidor/ ou use --sem-tls.")
+
+    # só confia no certificado do nosso servidor (validação do certificado)
+    contexto = ssl.create_default_context(cafile=CERTIFICADO_SERVIDOR)
+    return f"wss://{HOST}/ws/terminal", contexto
 
 # ---------- Chaves ----------
 
@@ -160,8 +178,9 @@ async def atender_pedido(ws, chave, pedido, ultima_resposta):
 
 async def main():
     chave = carregar_ou_criar_chave()
+    url, contexto_ssl = montar_conexao()
 
-    async with websockets.connect(SERVIDOR) as ws:
+    async with websockets.connect(url, ssl=contexto_ssl) as ws:
         desafio = json.loads(await ws.recv())
         await ws.send(json.dumps({
             "tipo": "hello",
@@ -182,6 +201,10 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\nTerminal encerrado.")
+    except ssl.SSLError as e:
+        print(f"Erro de TLS: {e.reason}. O servidor está em HTTPS com o mesmo cert.pem?")
+    except websockets.InvalidHandshake:
+        print("Resposta inválida do servidor. Se ele está em HTTPS, rode sem o --sem-tls.")
     except websockets.ConnectionClosed as e:
         print(f"Conexão encerrada pelo servidor: {e.reason or e}")
     except OSError:
