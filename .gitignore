@@ -2,3 +2,5 @@ terminal_priv.pem
 .venv/
 __pycache__/
 *.db
+key.pem
+cert.pem

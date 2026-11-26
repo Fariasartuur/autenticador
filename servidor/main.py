@@ -21,6 +21,10 @@ terminais_conectados = 0
 
 # ---------- Funções auxiliares ----------
 
+def eh_https(request: Request) -> bool:
+    # em HTTPS os cookies levam a flag "secure" (só trafegam criptografados)
+    return request.url.scheme == "https"
+
 def para_lista(texto: str) -> list[str]:
     return [e for e in texto.split(",") if e]
 
@@ -72,7 +76,7 @@ class LoginEntrada(BaseModel):
     password: str
 
 @app.post("/api/login")
-def login(dados: LoginEntrada, response: Response):
+def login(dados: LoginEntrada, request: Request, response: Response):
     with conectar() as conn:
         usuario = conn.execute(
             "SELECT * FROM usuarios WHERE email = ?", (dados.email,)
@@ -94,7 +98,7 @@ def login(dados: LoginEntrada, response: Response):
     if not terminal_ok:
         raise HTTPException(status_code=503, detail="Terminal desconectado. Tente novamente.")
 
-    response.set_cookie("pedido_login", pedido_id, httponly=True,
+    response.set_cookie("pedido_login", pedido_id, httponly=True, secure=eh_https(request),
                         samesite="strict", max_age=VALIDADE_PEDIDO)
     return {"pedido_id": pedido_id}
 
@@ -126,7 +130,7 @@ def status_pedido(pedido_id: str, request: Request, response: Response):
             conn.execute("UPDATE pedidos SET status = 'concluido' WHERE id = ?", (pedido_id,))
             registrar_evento(conn, "login_liberado", pedido["usuario_id"], pedido_id)
 
-            response.set_cookie("sessao", token, httponly=True,
+            response.set_cookie("sessao", token, httponly=True, secure=eh_https(request),
                                 samesite="strict", max_age=VALIDADE_SESSAO)
             response.delete_cookie("pedido_login")
 
